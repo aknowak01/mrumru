@@ -1,21 +1,27 @@
+import 'dart:typed_data';
 import 'package:equatable/equatable.dart';
-import 'package:mrumru/mrumru.dart';
+import 'package:mrumru/src/shared/dtos/a_base_frame_dto.dart';
+import 'package:mrumru/src/shared/dtos/data_frame_dto.dart';
+import 'package:mrumru/src/shared/utils/binary_utils.dart';
 
+/// A class representing a collection of frames.
 class FrameCollectionModel extends Equatable {
-  final List<FrameModel> frames;
+  /// The list of frames in this collection.
+  final List<ABaseFrameDto> frames;
 
+  /// Creates an instance of [FrameCollectionModel] with the provided [frames].
   const FrameCollectionModel(this.frames);
 
+  /// Merges the binary representations of all frames into a single binary string.
   String get mergedBinaryFrames {
-    return binaryFrames.join();
+    return frames.map((ABaseFrameDto baseFrameDto) => BinaryUtils.convertBytesToBinary(baseFrameDto.toBytes())).join();
   }
 
-  List<String> get binaryFrames {
-    return frames.map((FrameModel frame) => frame.binaryString).toList();
-  }
-
-  String get mergedRawData {
-    return frames.map((FrameModel e) => e.rawData).join();
+  /// Merges the data bytes of all data frames into a single byte array.
+  Uint8List get mergedDataBytes {
+    return Uint8List.fromList(
+      frames.whereType<DataFrameDto>().map((DataFrameDto baseFrameDto) => baseFrameDto.data.bytes).expand((Uint8List bytes) => bytes).toList(),
+    );
   }
 
   @override

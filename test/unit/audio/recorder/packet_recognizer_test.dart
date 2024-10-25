@@ -1,11 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mrumru/mrumru.dart';
 import 'package:mrumru/src/audio/recorder/packet_recognizer.dart';
 import 'package:mrumru/src/audio/recorder/queue/events/packet_received_event.dart';
+import 'package:mrumru/src/shared/dtos/compression_method.dart';
+import 'package:mrumru/src/shared/dtos/encoding_method.dart';
+import 'package:mrumru/src/shared/dtos/protocol_type.dart';
+import 'package:mrumru/src/shared/enums/version_number.dart';
 
 import '../../../utils/test_utils.dart';
 
@@ -14,15 +20,13 @@ void main() async {
     test('Should [return FrameCollectionModel] from given wave (chunksCount == 1)', () async {
       // Arrange
       AudioSettingsModel actualAudioSettingsModel = AudioSettingsModel.withDefaults().copyWith(chunksCount: 1);
-      FrameSettingsModel actualFrameSettingsModel = FrameSettingsModel.withDefaults();
 
       late FrameCollectionModel actualFrameCollectionModel;
 
       PacketRecognizer actualPacketRecognizer = PacketRecognizer(
         audioSettingsModel: actualAudioSettingsModel,
-        frameSettingsModel: actualFrameSettingsModel,
         onDecodingCompleted: (FrameCollectionModel frameCollectionModel) => actualFrameCollectionModel = frameCollectionModel,
-        onFrameDecoded: (FrameModel frameModel) {},
+        onFrameDecoded: (ABaseFrameDto baseFrameDto) {},
       );
 
       List<double> actualWave = await TestUtils.readAsDoubleFromFile(
@@ -40,12 +44,23 @@ void main() async {
       }
 
       // Assert
-      FrameCollectionModel expectedFrameCollectionModel = FrameCollectionModel(
-        <FrameModel>[
-          FrameModel(frameIndex: 0, framesCount: 2, rawData: '1234', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 1, framesCount: 2, rawData: '5678', frameSettings: actualFrameSettingsModel),
-        ],
-      );
+      FrameCollectionModel expectedFrameCollectionModel = FrameCollectionModel(<ABaseFrameDto>[
+        MetadataFrameDto.fromValues(
+          frameIndex: 0,
+          protocolID: ProtocolID.fromValues(
+            compressionMethod: CompressionMethod.noCompression,
+            encodingMethod: EncodingMethod.raw,
+            protocolType: ProtocolType.rawDataTransfer,
+            versionNumber: VersionNumber.firstDefault,
+          ),
+          sessionId: base64Decode('AQIDBA=='),
+          data: Uint8List(0),
+          dataFramesDtos: <DataFrameDto>[
+            DataFrameDto.fromValues(frameIndex: 1, data: base64Decode('MTIzNDU2Nzg=')),
+          ],
+        ),
+        DataFrameDto.fromValues(frameIndex: 1, data: base64Decode('MTIzNDU2Nzg=')),
+      ]);
 
       expect(actualFrameCollectionModel, expectedFrameCollectionModel);
     });
@@ -53,14 +68,12 @@ void main() async {
     test('Should [return FrameCollectionModel] from given wave (chunksCount == 2)', () async {
       // Arrange
       AudioSettingsModel actualAudioSettingsModel = AudioSettingsModel.withDefaults().copyWith(chunksCount: 2);
-      FrameSettingsModel actualFrameSettingsModel = FrameSettingsModel.withDefaults();
       late FrameCollectionModel actualFrameCollectionModel;
 
       PacketRecognizer actualPacketRecognizer = PacketRecognizer(
         audioSettingsModel: actualAudioSettingsModel,
-        frameSettingsModel: actualFrameSettingsModel,
         onDecodingCompleted: (FrameCollectionModel frameCollectionModel) => actualFrameCollectionModel = frameCollectionModel,
-        onFrameDecoded: (FrameModel frameModel) {},
+        onFrameDecoded: (ABaseFrameDto baseFrameDto) {},
       );
       List<double> actualWave = await TestUtils.readAsDoubleFromFile(File('test/unit/audio/assets/mocked_audio_wave_chunks_count_2.txt'));
 
@@ -75,12 +88,23 @@ void main() async {
       }
 
       // Assert
-      FrameCollectionModel expectedFrameCollectionModel = FrameCollectionModel(
-        <FrameModel>[
-          FrameModel(frameIndex: 0, framesCount: 2, rawData: '1234', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 1, framesCount: 2, rawData: '5678', frameSettings: actualFrameSettingsModel)
-        ],
-      );
+      FrameCollectionModel expectedFrameCollectionModel = FrameCollectionModel(<ABaseFrameDto>[
+        MetadataFrameDto.fromValues(
+          frameIndex: 0,
+          protocolID: ProtocolID.fromValues(
+            compressionMethod: CompressionMethod.noCompression,
+            encodingMethod: EncodingMethod.raw,
+            protocolType: ProtocolType.rawDataTransfer,
+            versionNumber: VersionNumber.firstDefault,
+          ),
+          sessionId: base64Decode('AQIDBA=='),
+          data: Uint8List(0),
+          dataFramesDtos: <DataFrameDto>[
+            DataFrameDto.fromValues(frameIndex: 1, data: base64Decode('MTIzNDU2Nzg=')),
+          ],
+        ),
+        DataFrameDto.fromValues(frameIndex: 1, data: base64Decode('MTIzNDU2Nzg=')),
+      ]);
 
       expect(actualFrameCollectionModel, expectedFrameCollectionModel);
     });
@@ -88,14 +112,12 @@ void main() async {
     test('Should [return FrameCollectionModel] from given wave (chunksCount == 4)', () async {
       // Arrange
       AudioSettingsModel actualAudioSettingsModel = AudioSettingsModel.withDefaults().copyWith(chunksCount: 4);
-      FrameSettingsModel actualFrameSettingsModel = FrameSettingsModel.withDefaults();
       late FrameCollectionModel actualFrameCollectionModel;
 
       PacketRecognizer actualPacketRecognizer = PacketRecognizer(
         audioSettingsModel: actualAudioSettingsModel,
-        frameSettingsModel: actualFrameSettingsModel,
         onDecodingCompleted: (FrameCollectionModel frameCollectionModel) => actualFrameCollectionModel = frameCollectionModel,
-        onFrameDecoded: (FrameModel frameModel) {},
+        onFrameDecoded: (ABaseFrameDto baseFrameDto) {},
       );
       List<double> actualWave = await TestUtils.readAsDoubleFromFile(File('test/unit/audio/assets/mocked_audio_wave_chunks_count_4.txt'));
 
@@ -108,13 +130,25 @@ void main() async {
         actualPacketRecognizer.addPacket(packetReceivedEvent);
         await Future<void>.delayed(const Duration(milliseconds: 100));
       }
+
       // Assert
-      FrameCollectionModel expectedFrameCollectionModel = FrameCollectionModel(
-        <FrameModel>[
-          FrameModel(frameIndex: 0, framesCount: 2, rawData: '1234', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 1, framesCount: 2, rawData: '5678', frameSettings: actualFrameSettingsModel)
-        ],
-      );
+      FrameCollectionModel expectedFrameCollectionModel = FrameCollectionModel(<ABaseFrameDto>[
+        MetadataFrameDto.fromValues(
+          frameIndex: 0,
+          protocolID: ProtocolID.fromValues(
+            compressionMethod: CompressionMethod.noCompression,
+            encodingMethod: EncodingMethod.raw,
+            protocolType: ProtocolType.rawDataTransfer,
+            versionNumber: VersionNumber.firstDefault,
+          ),
+          sessionId: base64Decode('AQIDBA=='),
+          data: Uint8List(0),
+          dataFramesDtos: <DataFrameDto>[
+            DataFrameDto.fromValues(frameIndex: 1, data: base64Decode('MTIzNDU2Nzg=')),
+          ],
+        ),
+        DataFrameDto.fromValues(frameIndex: 1, data: base64Decode('MTIzNDU2Nzg=')),
+      ]);
 
       expect(actualFrameCollectionModel, expectedFrameCollectionModel);
     });
@@ -122,14 +156,12 @@ void main() async {
     test('Should [return FrameCollectionModel] from given wave (chunksCount == 8)', () async {
       // Arrange
       AudioSettingsModel actualAudioSettingsModel = AudioSettingsModel.withDefaults().copyWith(chunksCount: 8);
-      FrameSettingsModel actualFrameSettingsModel = FrameSettingsModel.withDefaults();
       late FrameCollectionModel actualFrameCollectionModel;
 
       PacketRecognizer actualPacketRecognizer = PacketRecognizer(
         audioSettingsModel: actualAudioSettingsModel,
-        frameSettingsModel: actualFrameSettingsModel,
         onDecodingCompleted: (FrameCollectionModel frameCollectionModel) => actualFrameCollectionModel = frameCollectionModel,
-        onFrameDecoded: (FrameModel frameModel) {},
+        onFrameDecoded: (ABaseFrameDto baseFrameDto) {},
       );
       List<double> actualWave = await TestUtils.readAsDoubleFromFile(File('test/unit/audio/assets/mocked_audio_wave_chunks_count_8.txt'));
 
@@ -144,12 +176,23 @@ void main() async {
       }
 
       // Assert
-      FrameCollectionModel expectedFrameCollectionModel = FrameCollectionModel(
-        <FrameModel>[
-          FrameModel(frameIndex: 0, framesCount: 2, rawData: '1234', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 1, framesCount: 2, rawData: '5678', frameSettings: actualFrameSettingsModel)
-        ],
-      );
+      FrameCollectionModel expectedFrameCollectionModel = FrameCollectionModel(<ABaseFrameDto>[
+        MetadataFrameDto.fromValues(
+          frameIndex: 0,
+          protocolID: ProtocolID.fromValues(
+            compressionMethod: CompressionMethod.noCompression,
+            encodingMethod: EncodingMethod.raw,
+            protocolType: ProtocolType.rawDataTransfer,
+            versionNumber: VersionNumber.firstDefault,
+          ),
+          sessionId: base64Decode('AQIDBA=='),
+          data: Uint8List(0),
+          dataFramesDtos: <DataFrameDto>[
+            DataFrameDto.fromValues(frameIndex: 1, data: base64Decode('MTIzNDU2Nzg=')),
+          ],
+        ),
+        DataFrameDto.fromValues(frameIndex: 1, data: base64Decode('MTIzNDU2Nzg=')),
+      ]);
 
       expect(actualFrameCollectionModel, expectedFrameCollectionModel);
     });

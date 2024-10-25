@@ -1,33 +1,26 @@
+import 'dart:typed_data';
+
+/// A class that provides utility methods for binary operations.
 class BinaryUtils {
+  /// The number of bits in a single byte.
+  static const int bitsInByte = 8;
 
-  static String convertAsciiToBinary(String asciiText) {
-    return asciiText.codeUnits.map((int x) => x.toRadixString(2).padLeft(8, '0')).join();
-  }
-
-  static String convertBinaryToAscii(String binaryText) {
-    String cleanedBinaryText = binaryText.trim();
-    if (cleanedBinaryText.length % 8 != 0) {
-      int extraBits = cleanedBinaryText.length % 8;
-      cleanedBinaryText = cleanedBinaryText.substring(extraBits, cleanedBinaryText.length - extraBits);
+  /// Converts a binary string to a list of bytes.
+  ///
+  /// [binaryText] is a string representing binary data, which is divided
+  /// into groups of 8 bits (1 byte) and converted into a `Uint8List`.
+  static Uint8List convertBinaryToBytes(String binaryText) {
+    List<int> bytes = <int>[];
+    for (int i = 0; i + bitsInByte <= binaryText.length; i += bitsInByte) {
+      String byteString = binaryText.substring(i, i + bitsInByte);
+      int byte = int.parse(byteString, radix: 2);
+      bytes.add(byte);
     }
-
-    List<String> binaryChunks = RegExp(r'\d{8}').allMatches(cleanedBinaryText).map((RegExpMatch m) => m.group(0)!).toList();
-
-    List<int> asciiCodes = binaryChunks.map((String binaryChunk) => int.parse(binaryChunk, radix: 2)).toList();
-
-    String asciiText = String.fromCharCodes(asciiCodes);
-
-    return asciiText;
+    return Uint8List.fromList(bytes);
   }
 
-  static String parseIntToPaddedBinary(int value, int digits) {
-    return value.toRadixString(2).padLeft(digits, '0');
-  }
-
-  static List<String> splitBinary(String binary, int chunkSize) {
-    RegExp regex = RegExp('.{1,$chunkSize}');
-    List<String> chunks = regex.allMatches(binary).map((RegExpMatch match) => match.group(0)!).toList(growable: false);
-
-    return chunks;
+  /// Converts the bytes to a binary string.
+  static String convertBytesToBinary(Uint8List bytes) {
+    return bytes.map((int byte) => byte.toRadixString(2).padLeft(BinaryUtils.bitsInByte, '0')).join();
   }
 }

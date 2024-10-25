@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:mrumru/mrumru.dart';
 import 'package:mrumru/src/audio/generator/sample_generator.dart';
 import 'package:mrumru/src/audio/generator/samples_processor.dart';
-import 'package:mrumru/src/frame/frame_model_builder.dart';
+import 'package:mrumru/src/frame/frame_encoder.dart';
 import 'package:mrumru/src/shared/models/sample_model.dart';
 
 /// A class that generates audio signals from text messages using Frequency Shift Keying (FSK).
@@ -12,9 +12,6 @@ class AudioGenerator {
 
   /// The settings model for audio configuration.
   final AudioSettingsModel _audioSettingsModel;
-
-  /// The settings model for frame configuration.
-  final FrameSettingsModel _frameSettingsModel;
 
   /// Optional notifier for audio generation events.
   final AudioGeneratorNotifier? _audioGeneratorNotifier;
@@ -29,19 +26,17 @@ class AudioGenerator {
   AudioGenerator({
     required IAudioSink audioSink,
     required AudioSettingsModel audioSettingsModel,
-    required FrameSettingsModel frameSettingsModel,
     AudioGeneratorNotifier? audioGeneratorNotifier,
   })  : _audioGeneratorNotifier = audioGeneratorNotifier,
-        _frameSettingsModel = frameSettingsModel,
         _audioSettingsModel = audioSettingsModel,
         _audioSink = audioSink,
         _samplesProcessor = SamplesProcessor(),
         _sampleGenerator = SampleGenerator(audioSettingsModel);
 
-  /// This method encodes the text message into binary, converts the binary data
+  /// This method encodes the bytes into binary, converts the binary data
   /// into frequencies using FSK, and then builds and pushes audio samples to the sink.
-  Future<void> generate(String message) async {
-    String binaryData = _parseTextToBinary(message);
+  Future<void> generate(Uint8List bytes) async {
+    String binaryData = _parseBytesToBinary(bytes);
     _audioGeneratorNotifier?.onBinaryCreated?.call(binaryData);
 
     List<SampleModel> samplesList = _sampleGenerator.buildSamplesFromBinary(binaryData);
@@ -58,10 +53,10 @@ class AudioGenerator {
     _samplesProcessor.close();
   }
 
-  /// This method parses the text message into binary data.
-  String _parseTextToBinary(String text) {
-    FrameModelBuilder frameModelBuilder = FrameModelBuilder(frameSettingsModel: _frameSettingsModel);
-    FrameCollectionModel frameCollectionModel = frameModelBuilder.buildFrameCollection(text);
+  /// This method parses the bytes into binary data.
+  String _parseBytesToBinary(Uint8List bytes) {
+    FrameEncoder frameEncoder = FrameEncoder(frameDataBytesLength: _audioSettingsModel.frameDataBytesLength);
+    FrameCollectionModel frameCollectionModel = frameEncoder.buildFrameCollection(bytes);
     String binaryData = frameCollectionModel.mergedBinaryFrames;
     return _fillBinaryWithZeros(binaryData);
   }

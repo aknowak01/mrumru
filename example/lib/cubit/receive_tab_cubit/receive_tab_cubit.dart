@@ -1,14 +1,17 @@
+import 'dart:convert';
+
 import 'package:example/cubit/receive_tab_cubit/a_receive_tab_state.dart';
 import 'package:example/cubit/receive_tab_cubit/states/receive_tab_empty_state.dart';
 import 'package:example/cubit/receive_tab_cubit/states/receive_tab_recording_state.dart';
 import 'package:example/cubit/receive_tab_cubit/states/receive_tab_result_state.dart';
 import 'package:example/shared/utils/app_logger.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mrumru/mrumru.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ReceiveTabCubit extends Cubit<AReceiveTabState> {
-  final FrameSettingsModel _frameSettingsModel = FrameSettingsModel.withDefaults();
+  final ValueNotifier<String> consoleNotifier = ValueNotifier<String>('');
   late AudioSettingsModel audioSettingsModel = AudioSettingsModel.withDefaults();
   late AudioRecorderController _audioRecorderController;
 
@@ -20,11 +23,11 @@ class ReceiveTabCubit extends Cubit<AReceiveTabState> {
     try {
       _audioRecorderController = AudioRecorderController(
         audioSettingsModel: audioSettingsModel,
-        frameSettingsModel: _frameSettingsModel,
         onRecordingCompleted: _handleRecordingCompleted,
         onFrameReceived: _handleFrameReceived,
       );
       emit(ReceiveTabRecordingState(decodedMessage: ''));
+      consoleNotifier.value = '';
       _audioRecorderController.startRecording();
     } catch (e) {
       AppLogger().log(message: 'Cannot start recording: $e');
@@ -45,15 +48,15 @@ class ReceiveTabCubit extends Cubit<AReceiveTabState> {
   }
 
   void _handleRecordingCompleted(FrameCollectionModel frameCollectionModel) {
-    String decodedMessage = frameCollectionModel.mergedRawData;
+    String decodedMessage = String.fromCharCodes(frameCollectionModel.mergedDataBytes);
     emit(ReceiveTabResultState(decodedMessage: decodedMessage));
   }
 
-  void _handleFrameReceived(FrameModel frameModel) {
-    String decodedMessage = frameModel.rawData;
-    if (state is ReceiveTabRecordingState) {
-      decodedMessage = '${(state as ReceiveTabRecordingState).decodedMessage}$decodedMessage';
+  void _handleFrameReceived(ABaseFrameDto frameBaseDto) {
+    if (frameBaseDto is MetadataFrameDto) {
+      consoleNotifier.value += 'MetadataFrameDto: total frames: ${frameBaseDto.framesCount.toInt()}\n';
+    } else if (frameBaseDto is DataFrameDto) {
+      consoleNotifier.value += 'DataFrameDto (${frameBaseDto.frameIndex.toInt()}): ${base64Encode(frameBaseDto.data.bytes)}\n';
     }
-    emit(ReceiveTabRecordingState(decodedMessage: decodedMessage));
   }
 }

@@ -50,26 +50,35 @@ class _ReceiveTabState extends State<ReceiveTab> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        width: 1.0,
-                      ),
+                      border: Border.all(width: 1.0),
                       borderRadius: BorderRadius.circular(8.0),
                     ),
-                    child: Text(
-                      state.decodedMessage,
-                    ),
+                    child: Text(state.decodedMessage),
                   ),
                 const SizedBox(height: 40),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    border: Border.all(
-                      width: 1.0,
-                    ),
+                    border: Border.all(width: 1.0),
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: SettingsPreview(audioSettingsModel: widget.receiveTabCubit.audioSettingsModel),
+                ),
+                const SizedBox(height: 40),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    border: Border.all(width: 1.0),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: ValueListenableBuilder<String>(
+                    valueListenable: widget.receiveTabCubit.consoleNotifier,
+                    builder: (BuildContext context, String logs, _) {
+                      return Text(logs, style: const TextStyle(fontSize: 11));
+                    },
+                  ),
                 ),
               ],
             ),

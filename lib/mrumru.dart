@@ -10,7 +10,6 @@ library mrumru;
 ///   AudioGenerator audioGenerator = AudioGenerator(
 ///     audioSink: AudioSink(),
 ///     audioSettingsModel: AudioSettingsModel(),
-///     frameSettingsModel: FrameSettingsModel(),
 ///     audioGeneratorNotifier: AudioGeneratorNotifier(),
 ///   );
 ///
@@ -46,7 +45,6 @@ export 'package:mrumru/src/audio/generator/sink/i_audio_sink.dart';
 ///   // Creates an instance of [AudioRecorderController].
 ///   AudioRecorderController audioRecorderController = AudioRecorderController(
 ///     audioSettingsModel: AudioSettingsModel(),
-///     frameSettingsModel: FrameSettingsModel(),
 ///     onRecordingCompleted: () {},
 ///     onFrameReceived: (FrameModel frameModel) {},
 ///   );
@@ -58,6 +56,10 @@ export 'package:mrumru/src/audio/generator/sink/i_audio_sink.dart';
 ///   audioRecorderController.stopRecording();
 ///  ```
 export 'package:mrumru/src/audio/recorder/audio_recorder_controller.dart';
+export 'package:mrumru/src/shared/dtos/a_base_frame_dto.dart';
+export 'package:mrumru/src/shared/dtos/data_frame_dto.dart';
+export 'package:mrumru/src/shared/dtos/metadata_frame_dto.dart';
+export 'package:mrumru/src/shared/dtos/protocol_id.dart';
 
 /// Adds audio settings that can be modified to customize the audio structure.
 ///
@@ -88,47 +90,23 @@ export 'package:mrumru/src/audio/recorder/audio_recorder_controller.dart';
 ///
 ///   ```
 export 'package:mrumru/src/shared/models/audio_settings_model.dart';
+
+/// A class representing a collection of frames.
+///
+/// Usage:
+///   ```dart
+///   // Creating an instance of [FrameCollectionModel].
+///   FrameCollectionModel frameCollection = FrameCollectionModel([
+///     metadataFrame,
+///     dataFrame1,
+///     dataFrame2,
+///   ]);
+///
+///
+///   // Accessing merged binary frames from the collection.
+///   String mergedFrames = frameCollection.mergedBinaryFrames;
+///
+///   // Accessing merged data bytes from the collection.
+///   Uint8List mergedData = frameCollection.mergedDataBytes;
+///   ```
 export 'package:mrumru/src/shared/models/frame/frame_collection_model.dart';
-
-/// Provides model of frame used to encode and decode data.
-///
-/// Usage:
-///  ```
-///   // Creates an instance of [FrameModel].
-///   FrameModel frameModel = FrameModel(
-///     frameIndex: 0,
-///     framesCount: 20,
-///     rawData: '1234',
-///     frameSettings: FrameSettingsModel(),
-///   );
-///
-///   // Get [mergedBinaryFrames] from [FrameModel] created from decoded content of the frame.
-///   String mergedBinaryFrames = frameModel.mergedBinaryFrames;
-///
-///   // Create from binary string frame for decoding.
-///   FrameModel frameModel = FrameModel.fromBinaryString('101010101010101010101010');
-///
-///   // Get [binaryString] from [FrameModel] created from decoded content of the frame.
-///   String binaryString = frameModel.binaryString;
-///
-///   // Get [transferWavLength] from [FrameModel] calculated from the provided values.
-///   int transferWavLength = frameModel.getTransferWavLength(audioSettingsModel);
-///  ```
-export 'package:mrumru/src/shared/models/frame/frame_model.dart';
-
-/// Adds frame settings that are can be modified to customize the frame structure.
-///
-/// Usage:
-///  ```
-///   // Creates an instance of [FrameSettingsModel].
-///   FrameSettingsModel frameSettingsModel = FrameSettingsModel(
-///     frameIndexBitsLength: 4,
-///     framesCountBitsLength: 4,
-///     dataBitsLength: 8,
-///     checksumBitsLength: 4,
-///   );
-///
-///   // Creates an instance of [FrameSettingsModel] with default values.
-///   FrameSettingsModel frameSettingsModel = FrameSettingsModel.withDefaults();
-///  ```
-export 'package:mrumru/src/shared/models/frame/frame_settings_model.dart';

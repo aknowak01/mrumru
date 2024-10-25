@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -7,32 +8,36 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mrumru/mrumru.dart';
 import 'package:mrumru/src/audio/recorder/packet_recognizer.dart';
 import 'package:mrumru/src/audio/recorder/queue/events/packet_received_event.dart';
+import 'package:mrumru/src/shared/dtos/compression_method.dart';
+import 'package:mrumru/src/shared/dtos/encoding_method.dart';
+import 'package:mrumru/src/shared/dtos/protocol_type.dart';
+import 'package:mrumru/src/shared/enums/version_number.dart';
+import 'package:mrumru/src/shared/utils/app_logger.dart';
 import 'package:wav/wav.dart';
 
 void main() async {
   group('Tests of AudioGenerator.generate() and PacketRecognizer.decodedContent()', () {
     test('Should generate and correctly decode .WAV file', () async {
       // Arrange
-      AudioSettingsModel actualAudioSettingsModel = AudioSettingsModel.withDefaults().copyWith(chunksCount: 128);
-      FrameSettingsModel actualFrameSettingsModel = FrameSettingsModel.withDefaults();
+      AudioSettingsModel actualAudioSettingsModel = AudioSettingsModel.withDefaults().copyWith(chunksCount: 16, maxSkippedSamples: 1);
       File actualWavFile = File('./test/integration/assets/mocked_wave_file.wav');
-      String actualInputString = '123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~';
+      Uint8List actualInputBytes = utf8.encode('123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~');
       AudioFileSink audioFileSink = AudioFileSink(actualWavFile);
       late FrameCollectionModel actualFrameCollectionModel;
 
       PacketRecognizer actualPacketRecognizer = PacketRecognizer(
         audioSettingsModel: actualAudioSettingsModel,
-        frameSettingsModel: actualFrameSettingsModel,
         onDecodingCompleted: (FrameCollectionModel frameCollectionModel) => actualFrameCollectionModel = frameCollectionModel,
-        onFrameDecoded: (FrameModel frameModel) {},
+        onFrameDecoded: (ABaseFrameDto baseFrameDto) {
+          AppLogger().log(message: 'Frame decoded: $baseFrameDto');
+        },
       );
 
       // Act (AudioGenerator)
       await AudioGenerator(
         audioSink: audioFileSink,
         audioSettingsModel: actualAudioSettingsModel,
-        frameSettingsModel: actualFrameSettingsModel,
-      ).generate(actualInputString);
+      ).generate(actualInputBytes);
 
       await audioFileSink.future;
       Uint8List actualWavFileBytes = await actualWavFile.readAsBytes();
@@ -49,30 +54,27 @@ void main() async {
       }
 
       // Assert
-      FrameCollectionModel expectedFrameCollectionModel = FrameCollectionModel(
-        <FrameModel>[
-          FrameModel(frameIndex: 0, framesCount: 20, rawData: '1234', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 1, framesCount: 20, rawData: '5678', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 2, framesCount: 20, rawData: '9:;<', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 3, framesCount: 20, rawData: '=>?@', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 4, framesCount: 20, rawData: 'ABCD', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 5, framesCount: 20, rawData: 'EFGH', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 6, framesCount: 20, rawData: 'IJKL', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 7, framesCount: 20, rawData: 'MNOP', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 8, framesCount: 20, rawData: 'QRST', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 9, framesCount: 20, rawData: 'UVWX', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 10, framesCount: 20, rawData: 'YZ[]', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 11, framesCount: 20, rawData: '^_`a', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 12, framesCount: 20, rawData: 'bcde', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 13, framesCount: 20, rawData: 'fghi', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 14, framesCount: 20, rawData: 'jklm', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 15, framesCount: 20, rawData: 'nopq', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 16, framesCount: 20, rawData: 'rstu', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 17, framesCount: 20, rawData: 'vwxy', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 18, framesCount: 20, rawData: 'z{|}', frameSettings: actualFrameSettingsModel),
-          FrameModel(frameIndex: 19, framesCount: 20, rawData: '~', frameSettings: actualFrameSettingsModel)
-        ],
-      );
+      FrameCollectionModel expectedFrameCollectionModel = FrameCollectionModel(<ABaseFrameDto>[
+        MetadataFrameDto.fromValues(
+          frameIndex: 0,
+          protocolID: ProtocolID.fromValues(
+            compressionMethod: CompressionMethod.noCompression,
+            encodingMethod: EncodingMethod.raw,
+            protocolType: ProtocolType.rawDataTransfer,
+            versionNumber: VersionNumber.firstDefault,
+          ),
+          sessionId: base64Decode('AQIDBA=='),
+          data: Uint8List(0),
+          dataFramesDtos: <DataFrameDto>[
+            DataFrameDto.fromValues(frameIndex: 1, data: base64Decode('MTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1A=')),
+            DataFrameDto.fromValues(frameIndex: 2, data: base64Decode('UVJTVFVWV1hZWltdXl9gYWJjZGVmZ2hpamtsbW5vcHE=')),
+            DataFrameDto.fromValues(frameIndex: 3, data: base64Decode('cnN0dXZ3eHl6e3x9fg==')),
+          ],
+        ),
+        DataFrameDto.fromValues(frameIndex: 1, data: base64Decode('MTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1A=')),
+        DataFrameDto.fromValues(frameIndex: 2, data: base64Decode('UVJTVFVWV1hZWltdXl9gYWJjZGVmZ2hpamtsbW5vcHE=')),
+        DataFrameDto.fromValues(frameIndex: 3, data: base64Decode('cnN0dXZ3eHl6e3x9fg==')),
+      ]);
 
       expect(actualFrameCollectionModel, expectedFrameCollectionModel);
     });

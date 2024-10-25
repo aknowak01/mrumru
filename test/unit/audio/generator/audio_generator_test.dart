@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -8,7 +9,7 @@ import 'package:wav/wav.dart';
 import '../../../utils/test_utils.dart';
 
 void main() async {
-  String actualMessage = '12345678';
+  Uint8List actualBytes = utf8.encode('12345678');
   File actualWavTestFile = File('${Directory.systemTemp.path}/test.wav');
 
   group('Test of AudioGenerator.generate()', () {
@@ -20,9 +21,8 @@ void main() async {
       await AudioGenerator(
         audioSink: audioFileSink,
         audioSettingsModel: AudioSettingsModel.withDefaults().copyWith(chunksCount: 1),
-        frameSettingsModel: FrameSettingsModel.withDefaults(),
         audioGeneratorNotifier: AudioGeneratorNotifier(),
-      ).generate(actualMessage);
+      ).generate(actualBytes);
       await audioFileSink.future;
       Uint8List actualWavFileBytes = await actualWavTestFile.readAsBytes();
       List<double> actualWave = Wav.read(actualWavFileBytes).channels.first;
@@ -42,9 +42,8 @@ void main() async {
       await AudioGenerator(
         audioSink: audioFileSink,
         audioSettingsModel: AudioSettingsModel.withDefaults().copyWith(chunksCount: 2),
-        frameSettingsModel: FrameSettingsModel.withDefaults(),
         audioGeneratorNotifier: AudioGeneratorNotifier(),
-      ).generate(actualMessage);
+      ).generate(actualBytes);
       await audioFileSink.future;
       Uint8List actualWavFileBytes = await actualWavTestFile.readAsBytes();
       List<double> actualWave = Wav.read(actualWavFileBytes).channels.first;
@@ -64,9 +63,8 @@ void main() async {
       await AudioGenerator(
         audioSink: audioFileSink,
         audioSettingsModel: AudioSettingsModel.withDefaults().copyWith(chunksCount: 4),
-        frameSettingsModel: FrameSettingsModel.withDefaults(),
         audioGeneratorNotifier: AudioGeneratorNotifier(),
-      ).generate(actualMessage);
+      ).generate(actualBytes);
       await audioFileSink.future;
       Uint8List actualWavFileBytes = await actualWavTestFile.readAsBytes();
       List<double> actualWave = Wav.read(actualWavFileBytes).channels.first;
@@ -86,9 +84,8 @@ void main() async {
       await AudioGenerator(
         audioSink: audioFileSink,
         audioSettingsModel: AudioSettingsModel.withDefaults().copyWith(chunksCount: 8),
-        frameSettingsModel: FrameSettingsModel.withDefaults(),
         audioGeneratorNotifier: AudioGeneratorNotifier(),
-      ).generate(actualMessage);
+      ).generate(actualBytes);
       await audioFileSink.future;
       Uint8List actualWavFileBytes = await actualWavTestFile.readAsBytes();
       List<double> actualWave = Wav.read(actualWavFileBytes).channels.first;
@@ -108,9 +105,8 @@ void main() async {
       await AudioGenerator(
         audioSink: audioFileSink,
         audioSettingsModel: AudioSettingsModel.withDefaults().copyWith(chunksCount: 16),
-        frameSettingsModel: FrameSettingsModel.withDefaults(),
         audioGeneratorNotifier: AudioGeneratorNotifier(),
-      ).generate(actualMessage);
+      ).generate(actualBytes);
       await audioFileSink.future;
       Uint8List actualWavFileBytes = await actualWavTestFile.readAsBytes();
       List<double> actualWave = Wav.read(actualWavFileBytes).channels.first;
@@ -130,9 +126,8 @@ void main() async {
       await AudioGenerator(
         audioSink: audioFileSink,
         audioSettingsModel: AudioSettingsModel.withDefaults().copyWith(chunksCount: 32),
-        frameSettingsModel: FrameSettingsModel.withDefaults(),
         audioGeneratorNotifier: AudioGeneratorNotifier(),
-      ).generate(actualMessage);
+      ).generate(actualBytes);
       await audioFileSink.future;
       Uint8List actualWavFileBytes = await actualWavTestFile.readAsBytes();
       List<double> actualWave = Wav.read(actualWavFileBytes).channels.first;
@@ -152,9 +147,8 @@ void main() async {
       await AudioGenerator(
         audioSink: audioFileSink,
         audioSettingsModel: AudioSettingsModel.withDefaults().copyWith(chunksCount: 64),
-        frameSettingsModel: FrameSettingsModel.withDefaults(),
         audioGeneratorNotifier: AudioGeneratorNotifier(),
-      ).generate(actualMessage);
+      ).generate(actualBytes);
       await audioFileSink.future;
       Uint8List actualWavFileBytes = await actualWavTestFile.readAsBytes();
       List<double> actualWave = Wav.read(actualWavFileBytes).channels.first;

@@ -9,10 +9,9 @@ import 'package:wav/wav.dart';
 
 class AudioRecorderController {
   final AudioRecorder audioRecorder = AudioRecorder();
-  final ValueChanged<FrameModel>? onFrameReceived;
+  final ValueChanged<ABaseFrameDto>? onFrameReceived;
   final ValueChanged<FrameCollectionModel> onRecordingCompleted;
   final AudioSettingsModel audioSettingsModel;
-  final FrameSettingsModel frameSettingsModel;
   late final PacketRecognizer packetRecognizer;
   StreamSubscription<Uint8List>? recordingStreamSubscription;
 
@@ -20,7 +19,6 @@ class AudioRecorderController {
     required this.audioSettingsModel,
     required this.onRecordingCompleted,
     required this.onFrameReceived,
-    required this.frameSettingsModel,
   });
 
   Future<void> startRecording() async {
@@ -33,7 +31,6 @@ class AudioRecorderController {
 
     packetRecognizer = PacketRecognizer(
       audioSettingsModel: audioSettingsModel,
-      frameSettingsModel: frameSettingsModel,
       onFrameDecoded: onFrameReceived,
       onDecodingCompleted: _completeDecoding,
     );

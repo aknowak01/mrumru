@@ -7,9 +7,6 @@ class AudioSettingsModel with EquatableMixin {
   /// Static value for fade calculation
   static const double millisecondsInSeconds = 1000.0;
 
-  /// Static value for maxOffset calculation. Provides the maximum number of skipped samples for the offset.
-  static const int maxSkippedSamples = 7;
-
   /// Static value for samples calculation. Provides number of samples.
   static const int defaultSampleRate = 44000;
 
@@ -22,6 +19,8 @@ class AudioSettingsModel with EquatableMixin {
   final int channels;
   final int chunksCount;
   final int baseFrequencyGap;
+  final int frameDataBytesLength;
+  final int maxSkippedSamples;
   final double frequencyFactor;
   final Duration fadeDuration;
   final Duration sampleDuration;
@@ -46,6 +45,8 @@ class AudioSettingsModel with EquatableMixin {
     required this.channels,
     required this.chunksCount,
     required this.baseFrequencyGap,
+    required this.frameDataBytesLength,
+    required this.maxSkippedSamples,
     required this.frequencyFactor,
     required this.fadeDuration,
     required this.sampleDuration,
@@ -73,6 +74,8 @@ class AudioSettingsModel with EquatableMixin {
       channels: 1,
       chunksCount: 64,
       baseFrequencyGap: 50,
+      frameDataBytesLength: 32,
+      maxSkippedSamples: 7,
       frequencyFactor: 1 / 340,
       fadeDuration: const Duration(milliseconds: 100),
       sampleDuration: const Duration(milliseconds: 200),
@@ -89,6 +92,8 @@ class AudioSettingsModel with EquatableMixin {
     int? channels,
     int? chunksCount,
     int? baseFrequencyGap,
+    int? frameDataBytesLength,
+    int? maxSkippedSamples,
     double? frequencyFactor,
     Duration? fadeDuration,
     Duration? sampleDuration,
@@ -102,6 +107,8 @@ class AudioSettingsModel with EquatableMixin {
       channels: channels ?? this.channels,
       chunksCount: chunksCount ?? this.chunksCount,
       baseFrequencyGap: baseFrequencyGap ?? this.baseFrequencyGap,
+      frameDataBytesLength: frameDataBytesLength ?? this.frameDataBytesLength,
+      maxSkippedSamples: maxSkippedSamples ?? this.maxSkippedSamples,
       frequencyFactor: frequencyFactor ?? this.frequencyFactor,
       fadeDuration: fadeDuration ?? this.fadeDuration,
       sampleDuration: sampleDuration ?? this.sampleDuration,
